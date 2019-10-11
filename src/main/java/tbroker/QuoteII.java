@@ -30,7 +30,7 @@ import java.util.concurrent.*;
 import org.json.*;
 
 public class QuoteII extends RPCClient implements Quote {
-    static final long PERIOD = 30 * 1000L;
+    static final long PERIOD = 7 * 1000L;
 
     static final int POOL = 3;
 
@@ -54,7 +54,6 @@ public class QuoteII extends RPCClient implements Quote {
         log(E, token);
         if (!support("SPY")) throw new Exception("login fails");
     }
-
     static String toRSym(String sym) {
         if (sym.startsWith("tx")) {
             return "TX" + sym.substring(6, 8) + ".TW";
@@ -116,17 +115,41 @@ public class QuoteII extends RPCClient implements Quote {
 
     class P implements Runnable {
         String sym;
-
+        TxParser txParser = new TxParser();
         P(String _sym) {
             sym = _sym;
         }
 
         public void run() {
             try {
-                JSONObject ret = get("/quote/" + sym);
-                tick(sym, ret);
+                /*
+                    {"ret":"OK","a":"-1","b":"-1","v":"10668.00","ts":"1561039297","o":"10602.00"}
+                */
+                JSONObject ret1 = get("/quote/" + sym);
+                String i2ret = ret1.getString("ret");
+
+                JSONObject ret2 = txParser.getTxPrice(sym);
+                String txParserRet = ret2.getString("ret");
+
+                if (i2ret.equals(txParserRet) == false) {
+                    Date now = new Date();
+                    log(E, "(i2ret, txParserRet) = (" + i2ret + ", " + txParserRet + ") @" + formatL(now));
+                    tick(sym, ret2); // Wrokaround for i2trader's 9:23AM bug
+                }
+                else {
+                    tick(sym, ret1);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
+                Date now = new Date();
+                log(E, "Switching to 2nd source @" + formatL(now));
+                try {
+                    JSONObject ret = txParser.getTxPrice(sym);
+                    tick(sym, ret);
+                }
+                catch(Exception ee) {
+                    log(E, "Second source is also down...");
+                }
             }
         }
     }
@@ -141,7 +164,7 @@ public class QuoteII extends RPCClient implements Quote {
             if (jsn.has("o")) {
                 tickOpen = new Tick(new Date(ts * 1000), 1, jsn.getDouble("o"));
             }
-            if (tick == null && tick.pri == 0) return;
+            if (tick == null || tick.pri == 0) return;
             if (isTW(sym)) {
                 Date td = tick.getDate();
                 Date now = new Date();

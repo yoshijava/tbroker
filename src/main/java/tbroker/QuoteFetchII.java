@@ -40,16 +40,7 @@ public class QuoteFetchII extends RPCClient implements QuoteFetch {
     }
 
     public LinkedList<Candle> fetch(String sym, Date ts1, Date ts2) {
-        LinkedList<Candle> ret = new LinkedList<Candle>();
-        try {
-            Tick t = fetch(sym);
-            Candle c = new Candle(t.pri, t.pri, t.pri, t.pri, ts1.getTime() / 1000);
-            ret.add(c);
-        } catch (Exception e) {
-            log(e);
-        }
-        return ret;
-        // throw new RuntimeException("fetch is not supported:"+formatL(ts1)+","+formatL(ts2));
+        throw new RuntimeException("fetch is not supported");
     }
 
     public Tick fetch(String sym) throws Exception {

@@ -45,9 +45,7 @@ public class Deal extends Util {
                 + sep
                 + format(date, "yyyy/MM/dd HH:mm:ss")
                 + sep
-                + String.format(
-                        "%6.2f%s%3d%s%s%s%s",
-                        pri, Cfg.sep, vol, Cfg.sep, tag, Cfg.sep, new String(oid));
+                + String.format("%6.2f%s%3d%s%s%s%s", pri, Cfg.sep, vol, Cfg.sep, tag, Cfg.sep, new String(oid));
     }
 
     public JSONObject toJsn() {
