@@ -30,9 +30,12 @@ public class QuoteCloud extends Cloud implements Quote {
                 return;
             }
             String event = sk.nextToken();
-            Date d = new Date(Long.parseLong(sk.nextToken()));
+            Date d = null;
             for (QuoteListener ql : qll) {
                 if (event.equals("dO")) {
+                    if (d == null) {
+                        d = new Date(Long.parseLong(sk.nextToken()));
+                    }
                     ql.dayOpen(d);
                 } else if (event.equals("dC")) {
                     ql.dayClose();
