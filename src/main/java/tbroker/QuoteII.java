@@ -30,7 +30,7 @@ import java.util.concurrent.*;
 import org.json.*;
 
 public class QuoteII extends RPCClient implements Quote {
-    static final long PERIOD = 7 * 1000L;
+    static final long PERIOD = 6 * 1000L;
 
     static final int POOL = 3;
 
