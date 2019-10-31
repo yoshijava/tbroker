@@ -18,7 +18,10 @@ public class QuoteCloud extends Cloud implements Quote {
         String id = sk.nextToken();
         if (id.equals("_")) {
             String qid = sk.nextToken();
-            List<QuoteListener> qll = id2listeners.get(qid);
+            List<QuoteListener> qll = null;
+            synchronized (id2listeners) {
+                qll = id2listeners.get(qid);
+            }
             if (qll == null) {
                 if (!dbg.contains("" + qid)) {
                     dbg.add("" + qid);
@@ -76,14 +79,16 @@ public class QuoteCloud extends Cloud implements Quote {
     }
 
     public void bind(String sym, QuoteListener l) {
-        if (!sym2id.containsKey(sym)) {
-            String id = getBindID(sym);
-            sym2id.put(sym, id);
-            LinkedList<QuoteListener> qll = new LinkedList<QuoteListener>();
-            id2listeners.put(id, qll);
+        synchronized (id2listeners) {
+            if (!sym2id.containsKey(sym)) {
+                String id = getBindID(sym);
+                sym2id.put(sym, id);
+                LinkedList<QuoteListener> qll = new LinkedList<QuoteListener>();
+                id2listeners.put(id, qll);
+            }
+            String id = sym2id.get(sym);
+            id2listeners.get(id).add(l);
         }
-        String id = sym2id.get(sym);
-        id2listeners.get(id).add(l);
     }
 
     class QuoteDump implements QuoteListener {
