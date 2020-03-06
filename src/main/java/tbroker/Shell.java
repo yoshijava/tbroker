@@ -35,7 +35,8 @@ import org.json.*;
 public class Shell extends Util implements Runnable, DealListener, QuoteListener, BrokerMapper {
     InputStream in;
     PrintStream out;
-    Quote quote;
+    // Quote quote;
+    QuoteServer quoteAggregator;
     Broker broker;
     QuoteFetch fetch;
     History history;
@@ -62,6 +63,7 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
         factory = new StrategyFactoryH();
         traders = null;
         dealLog = null;
+        quoteAggregator = QuoteServer.getInstance();
         rpc = new Hashtable<String, RPCMethod>();
         rpc.put("order", new RPCOrder(this));
         rpc.put("cancel", new RPCCancel());
@@ -70,8 +72,9 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
     }
 
     void quote(String[] as) throws Exception {
-        quote = (Quote) Class.forName(as[1]).newInstance();
+        Quote quote = (Quote) Class.forName(as[1]).newInstance();
         quote.login(as[2]);
+        quoteAggregator.add(quote);
     }
 
     void qfetch(String[] as) throws Exception {
@@ -107,8 +110,8 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
     }
 
     void bind(String[] as) {
-        if (quote == null) log("no quote instance");
-        quote.bind(as[1], new ShellQuote(as[1].toUpperCase()));
+        if (quoteAggregator.getNumQuotes() == 0) log("no quote instance");
+        quoteAggregator.bind(as[1], new ShellQuote(as[1].toUpperCase()));
     }
 
     public Broker getBroker(String token) {
@@ -278,7 +281,7 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
             sym = _sym;
             log(E, "init %s", sym);
             for (int i = 0; i < strats.size(); i++)
-                strats.get(i).init(sym, Shell.this, broker, quote);
+                strats.get(i).init(sym, Shell.this, broker, quoteAggregator);
 
             int total = 0;
             for (Strategy p : strats) {
@@ -303,7 +306,7 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
 
     // as[1]: tx,StratgyN:1,StrategyNU:1
     void trader(String[] as) throws Exception {
-        if (quote == null) throw new Exception("no quote cmd before trader cmd");
+        if (quoteAggregator.getNumQuotes() == 0) throw new Exception("no quote cmd before trader cmd");
         if (broker == null) throw new Exception("no broker cmd before trader cmd");
         if (traders != null) throw new Exception("trader has been started");
         int nmonth = Integer.parseInt(as[1]);
@@ -323,7 +326,7 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
             String sym = future + format(d, "yyyyMM");
             log("Trader4Sym %s", sym);
             LinkedList<Strategy> strats = factory.getStrategy(sym, msk);
-            if (i == 0) quote.bind(sym, this);
+            if (i == 0) quoteAggregator.bind(sym, this);
             traders.add(new Trader4Sym(strats, sym));
         }
     }
