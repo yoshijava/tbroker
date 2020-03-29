@@ -37,7 +37,7 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
     PrintStream out;
     // Quote quote;
     QuoteServer quoteAggregator;
-    Broker broker;
+    BrokerShell broker;
     QuoteFetch fetch;
     History history;
     Hashtable<String, Tick> curQuotes;
@@ -123,7 +123,8 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
     }
 
     void broker(String[] as) throws Exception {
-        broker = (Broker) Class.forName(as[1]).newInstance();
+        Broker bbroker = (Broker) Class.forName(as[1]).newInstance();
+        broker = new BrokerShell(bbroker);
         broker.login(as[2]);
         for (String name : rpc.keySet()) {
             rpc.get(name).setBroker(this);
@@ -374,6 +375,13 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
         out.flush();
     }
 
+    void lsd(String[] as) {
+        for (Deal d : broker.deals) {
+            out.println(d.toString());
+        }
+        out.flush();
+    }
+
     void help(String[] as) {
         out.println(String.format("%-8s %s", "quote", "<class> <acc_pass>"));
         out.println(String.format("%-8s %s", "bind", "<sym> <acc_pass>"));
@@ -392,6 +400,7 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
         out.println(String.format("%-8s %s", "auto", ""));
         out.println(String.format("%-8s %s", "ls", ""));
         out.println(String.format("%-8s %s", "ls-odr", ""));
+        out.println(String.format("%-8s %s", "ls-deal", ""));
         out.println(String.format("%-8s %s", "ls-quote", ""));
         out.println(String.format("%-8s %s", "rpc-http", "<port>"));
         out.println(String.format("%-8s %s", "rpc-exe", "<json contains cmds>"));
@@ -503,14 +512,16 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
             ls(args);
         } else if (cmd.equals("ls-odr") || cmd.equals("lso")) {
             lso(args);
+        } else if (cmd.equals("ls-deal") || cmd.equals("lsd")) {
+            lsd(args);
         } else if (cmd.equals("rpc-http")) {
             rpcHttp(args);
         } else if (cmd.equals("rpc-exe")) {
             rpcExe(args);
-        } else {
-            return false;
+        } else if (cmd.equals("quit")) {
+            System.exit(0);
         }
-        return true;
+        return false;
     }
 
     public void run() {
