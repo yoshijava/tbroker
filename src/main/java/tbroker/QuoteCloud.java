@@ -10,7 +10,7 @@ public class QuoteCloud extends Cloud implements Quote {
             new Hashtable<String, List<QuoteListener>>();
     private Hashtable<String, String> sym2id = new Hashtable<String, String>();
 
-    HashSet<String> dbg = new HashSet<String>();
+    HashSet<String> dbg2 = new HashSet<String>();
 
     void cloudIn(byte[] v) throws Exception {
         dbg("in:" + new String(v));
@@ -23,8 +23,8 @@ public class QuoteCloud extends Cloud implements Quote {
                 qll = id2listeners.get(qid);
             }
             if (qll == null) {
-                if (!dbg.contains("" + qid)) {
-                    dbg.add("" + qid);
+                if (!dbg2.contains("" + qid)) {
+                    dbg2.add("" + qid);
                     log(E, "QuoteListener %s is null", qid);
                 }
                 return;
@@ -41,9 +41,9 @@ public class QuoteCloud extends Cloud implements Quote {
                     ql.dayClose();
                 } else {
                     Tick tick = new Tick(event);
-                    if(ql instanceof StrategyTX) {
+                    if (ql instanceof StrategyTX) {
                         StrategyTX strategy = (StrategyTX) ql;
-                        if(strategy.isOpened() == false) {
+                        if (strategy.isOpened() == false) {
                             // Tick is coming but day is not opened. Force to open.
                             d = new Date(); // Go, now.
                             ql.dayOpen(d);
