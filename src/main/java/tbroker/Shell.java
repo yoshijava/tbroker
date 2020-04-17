@@ -353,7 +353,7 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
     void ls(String[] as) {
         out.println(
                 String.format(
-                        "%3s %6s %8s %6s %6s %6s %6s %6s",
+                        "%3s %10s %8s %6s %6s %6s %6s %6s",
                         "oi", "ptag", "tar", "open", "last", "stp", "upp", "net"));
         out.flush();
         for (Trader4Sym dae : traders) {
@@ -523,8 +523,10 @@ public class Shell extends Util implements Runnable, DealListener, QuoteListener
             rpcExe(args);
         } else if (cmd.equals("quit")) {
             System.exit(0);
+        } else {
+            return false;
         }
-        return false;
+        return true;
     }
 
     public void run() {
